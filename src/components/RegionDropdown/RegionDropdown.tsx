@@ -1,18 +1,24 @@
 import React from "react";
+import useRegions from "../../hooks/useRegions";
+import * as R from "ramda";
 
-interface RegionDropdownProps {
-  regions: string[];
-}
+const sortByName = R.sortBy(R.prop("name"));
 
-function RegionDropdown(props: RegionDropdownProps) {
-  const { regions } = props;
+function RegionDropdown() {
+  const regions = useRegions();
   return (
     <select>
-      {regions.map((region) => (
-        <option key={region} value={region}>
-          {region}
+      {regions.length ? (
+        sortByName(regions).map((region) => (
+          <option key={region.id} value={region.id}>
+            {region.name}
+          </option>
+        ))
+      ) : (
+        <option key="loading" value="loading" disabled>
+          Loading…
         </option>
-      ))}
+      )}
     </select>
   );
 }
