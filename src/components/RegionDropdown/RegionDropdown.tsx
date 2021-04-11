@@ -10,7 +10,7 @@ function RegionDropdown() {
     <select>
       {regions.length ? (
         sortByName(regions).map((region) => (
-          <option key={region.id} value={region.id}>
+          <option key={region.region_id} value={region.region_id}>
             {region.name}
           </option>
         ))

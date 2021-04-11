@@ -9,7 +9,6 @@ export const useRegions = () => {
     const subscription = regionService.regions.subscribe((next: Region[]) =>
       setRegions(next)
     );
-    //regionService.fetchRegions();
     return () => subscription.unsubscribe();
   }, [regionService]);
   return regions;

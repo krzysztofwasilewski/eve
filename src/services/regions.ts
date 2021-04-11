@@ -4,7 +4,7 @@ import { fromFetch } from "rxjs/fetch";
 import { Service } from "typedi";
 
 export interface Region {
-  id: string;
+  region_id: string;
   name: string;
 }
 
@@ -26,12 +26,6 @@ export class RegionsService {
             concatAll()
           )
           .pipe(
-            // regionIDs.subscribe({
-            //   next: (n) => console.log("next ID", n),
-            // });
-            // regionIDs.subscribe((next) => console.log(next));
-            // let regions = regionIDs
-
             map((id: string) =>
               fromFetch<Region>(
                 `https://esi.evetech.net/latest/universe/regions/${id}`,
@@ -48,16 +42,4 @@ export class RegionsService {
     this.regions = new BehaviorSubject<Region[]>([]);
     regions.subscribe((region) => this.regions.next(region));
   }
-  //   fetchRegions() {
-  //     fetch("https://esi.evetech.net/latest/universe/regions")
-  //       .then((r) => r.json())
-  //       .then((data: string[]) =>
-  //         Promise.all(
-  //           data.map((regID) =>
-  //             fetch(
-  //               `https://esi.evetech.net/latest/universe/regions/${regID}`
-  //             ).then((r) => r.json())
-  //           )
-  //         ).then((regions: Region[]) => this.regions.next(regions))
-  //       );
 }
