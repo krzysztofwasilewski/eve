@@ -1,13 +1,12 @@
 import React from "react";
-import RegionDropdown from "../components/RegionDropdown/RegionDropdown";
+import RegionDropdown, {
+  RegionDropdownProps,
+} from "../components/RegionDropdown/RegionDropdown";
 
-import { Meta } from "@storybook/react";
+import { Meta, Story } from "@storybook/react";
 
-const regions = [
-  { id: "1", name: "Alpha" },
-  { id: "2", name: "Beta" },
-  { id: "3", name: "Gamma" },
-];
-export const RegionDropdownWithSamples = () => <RegionDropdown />;
+export const RegionDropdownWithSamples: Story<RegionDropdownProps> = (args) => (
+  <RegionDropdown {...args} />
+);
 
 export default { title: "Regions", component: RegionDropdown } as Meta;

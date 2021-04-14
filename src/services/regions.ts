@@ -1,11 +1,24 @@
 import { BehaviorSubject, timer } from "rxjs";
-import { concatAll, map, toArray } from "rxjs/operators";
+import {
+  concatAll,
+  concatMap,
+  filter,
+  map,
+  mergeAll,
+  mergeMap,
+  toArray,
+} from "rxjs/operators";
 import { fromFetch } from "rxjs/fetch";
 import { Service } from "typedi";
+import * as R from "ramda";
 
 export interface Region {
   region_id: string;
   name: string;
+}
+
+function toJson<T>(response: Response): Promise<T> {
+  return response.json();
 }
 
 @Service()
@@ -14,32 +27,24 @@ export class RegionsService {
 
   constructor() {
     let regions = timer(3000, 60000).pipe(
-      map(() => {
-        return fromFetch<string[]>(
-          "https://esi.evetech.net/latest/universe/regions",
-          {
-            selector: (r) => r.json(),
-          }
+      concatMap(() =>
+        fromFetch<string[]>("https://esi.evetech.net/latest/universe/regions", {
+          selector: toJson,
+        }).pipe(
+          mergeAll(),
+          filter<string>(R.both(R.gte(R.__, 10000000), R.lte(R.__, 11000000))),
+          map((id) => `https://esi.evetech.net/latest/universe/regions/${id}`),
+          mergeMap(
+            (url: string) => fromFetch<Region>(url, { selector: toJson }),
+            4
+          ),
+
+          toArray()
         )
-          .pipe(
-            map((el) => el.map((id) => id)),
-            concatAll()
-          )
-          .pipe(
-            map((id: string) =>
-              fromFetch<Region>(
-                `https://esi.evetech.net/latest/universe/regions/${id}`,
-                { selector: (r) => r.json() }
-              )
-            ),
-            concatAll(),
-            toArray()
-          );
-      }),
-      concatAll()
+      )
     );
 
     this.regions = new BehaviorSubject<Region[]>([]);
-    regions.subscribe((region) => this.regions.next(region));
+    regions.subscribe(this.regions.next.bind(this.regions));
   }
 }
