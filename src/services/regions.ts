@@ -32,13 +32,11 @@ export class RegionsService {
           selector: toJson,
         }).pipe(
           mergeAll(),
-          filter<string>(R.both(R.gte(R.__, 10000000), R.lte(R.__, 11000000))),
+          filter<string>(R.both(R.gte(R.__, 10000000), R.lt(R.__, 11000000))),
           map((id) => `https://esi.evetech.net/latest/universe/regions/${id}`),
-          mergeMap(
-            (url: string) => fromFetch<Region>(url, { selector: toJson }),
-            4
+          mergeMap((url: string) =>
+            fromFetch<Region>(url, { selector: toJson })
           ),
-
           toArray()
         )
       )

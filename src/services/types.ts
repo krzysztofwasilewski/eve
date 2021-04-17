@@ -1,6 +1,6 @@
 import { of, range } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
-import { bufferTime, map, mergeAll, mergeMap } from "rxjs/operators";
+import { bufferTime, map, mergeAll, mergeMap, retry } from "rxjs/operators";
 import { Service } from "typedi";
 
 const MAX_CONCURRENT_CONNECTIONS = 500;
@@ -34,7 +34,7 @@ class TypesService {
   typeIDsForRegion = (regionId: string) =>
     of(regionId).pipe(
       map((id) => `https://esi.evetech.net/latest/markets/${id}/types`),
-      mergeMap((url) => fromFetch(url, { method: "HEAD" })),
+      mergeMap((url) => fromFetch(url, { method: "HEAD" }).pipe(retry(3))),
       mergeMap((response) =>
         range(1, parseInt(response.headers.get("x-pages") || "1"))
       ),
@@ -42,7 +42,7 @@ class TypesService {
         fromFetch<string[]>(
           `https://esi.evetech.net/latest/markets/${regionId}/types?page=${page}`,
           { selector: (r) => r.json() }
-        )
+        ).pipe(retry(3))
       ),
       mergeAll()
     );
@@ -54,7 +54,7 @@ class TypesService {
           fromFetch<Type>(
             `https://esi.evetech.net/latest/universe/types/${regionID}`,
             { selector: (r) => r.json() }
-          ),
+          ).pipe(retry(3)),
 
         MAX_CONCURRENT_CONNECTIONS
       )
