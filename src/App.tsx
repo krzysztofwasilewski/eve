@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import "./App.css";
 import { ServicesContextProvider } from "./context/ServiceContext";
 import RegionDropdown from "./components/RegionDropdown/RegionDropdown";
-import TypesList from "./components/TypesList/TypesList";
 import PriceList from "./components/PriceList/PriceList";
 
 function App() {

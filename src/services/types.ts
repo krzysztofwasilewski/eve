@@ -1,7 +1,8 @@
-import { of, range } from "rxjs";
+import { ObservedValueOf, of, range, ReplaySubject } from "rxjs";
 import { fromFetch } from "rxjs/fetch";
 import { bufferTime, map, mergeAll, mergeMap, retry } from "rxjs/operators";
 import { Service } from "typedi";
+import * as R from "ramda";
 
 const MAX_CONCURRENT_CONNECTIONS = 500;
 
@@ -39,7 +40,7 @@ class TypesService {
         range(1, parseInt(response.headers.get("x-pages") || "1"))
       ),
       mergeMap((page) =>
-        fromFetch<string[]>(
+        fromFetch<number[]>(
           `https://esi.evetech.net/latest/markets/${regionId}/types?page=${page}`,
           { selector: (r) => r.json() }
         ).pipe(retry(3))
@@ -47,8 +48,8 @@ class TypesService {
       mergeAll()
     );
 
-  typesForRegion = (regionId: string) =>
-    this.typeIDsForRegion(regionId).pipe(
+  typesForRegion = R.memoizeWith(R.identity, (regionId: string) => {
+    const typesStream = this.typeIDsForRegion(regionId).pipe(
       mergeMap(
         (regionID) =>
           fromFetch<Type>(
@@ -59,6 +60,12 @@ class TypesService {
         MAX_CONCURRENT_CONNECTIONS
       )
     );
+    const typesSubject = new ReplaySubject<
+      ObservedValueOf<typeof typesStream>
+    >();
+    typesStream.subscribe(typesSubject);
+    return typesSubject;
+  });
   typesForRegionBuffered = (regionId: string) =>
     this.typesForRegion(regionId).pipe(bufferTime(1000));
 }

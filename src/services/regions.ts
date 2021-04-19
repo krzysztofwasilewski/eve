@@ -1,11 +1,11 @@
-import { BehaviorSubject, timer } from "rxjs";
+import { BehaviorSubject, ObservedValueOf, timer } from "rxjs";
 import {
-  concatAll,
   concatMap,
   filter,
   map,
   mergeAll,
   mergeMap,
+  retry,
   toArray,
 } from "rxjs/operators";
 import { fromFetch } from "rxjs/fetch";
@@ -31,18 +31,19 @@ export class RegionsService {
         fromFetch<string[]>("https://esi.evetech.net/latest/universe/regions", {
           selector: toJson,
         }).pipe(
+          retry(3),
           mergeAll(),
           filter<string>(R.both(R.gte(R.__, 10000000), R.lt(R.__, 11000000))),
           map((id) => `https://esi.evetech.net/latest/universe/regions/${id}`),
           mergeMap((url: string) =>
-            fromFetch<Region>(url, { selector: toJson })
+            fromFetch<Region>(url, { selector: toJson }).pipe(retry(3))
           ),
           toArray()
         )
       )
     );
 
-    this.regions = new BehaviorSubject<Region[]>([]);
-    regions.subscribe(this.regions.next.bind(this.regions));
+    this.regions = new BehaviorSubject<ObservedValueOf<typeof regions>>([]);
+    regions.subscribe(this.regions);
   }
 }
